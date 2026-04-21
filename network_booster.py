@@ -22,6 +22,8 @@ DEFAULT_DNS_SERVERS = [
 ]
 
 FALLBACK_DNS = DEFAULT_DNS_SERVERS[0]
+MIN_RELIABLE_SUCCESS_RATE = 0.5
+MIN_STABLE_TCP_SUCCESS_RATE = 0.7
 
 DEFAULT_TCP_TARGETS = [
     ("1.1.1.1", 443),
@@ -121,7 +123,7 @@ def probe_tcp_target(host: str, port: int, attempts: int, timeout: float) -> Tcp
 
 
 def best_dns(results: Iterable[DnsProbeResult]) -> str | None:
-    valid = [r for r in results if r.average_ms is not None and r.success_rate >= 0.5]
+    valid = [r for r in results if r.average_ms is not None and r.success_rate >= MIN_RELIABLE_SUCCESS_RATE]
     if not valid:
         return None
     return min(valid, key=lambda r: cast(float, r.average_ms)).server
@@ -134,7 +136,7 @@ def generate_recommendations(
 ) -> list[str]:
     recs: list[str] = []
 
-    dns_failures = [r for r in dns_results if r.success_rate < 0.5]
+    dns_failures = [r for r in dns_results if r.success_rate < MIN_RELIABLE_SUCCESS_RATE]
     if dns_failures:
         recs.append("DNS responses are unstable. Restart your router and avoid overloaded ISP DNS.")
 
@@ -143,7 +145,7 @@ def generate_recommendations(
     else:
         recs.append("Could not find a reliable public DNS from current network path. Check firewall/VPN settings.")
 
-    weak_tcp = [r for r in tcp_results if r.success_rate < 0.7]
+    weak_tcp = [r for r in tcp_results if r.success_rate < MIN_STABLE_TCP_SUCCESS_RATE]
     high_latency = [r for r in tcp_results if r.average_ms is not None and r.average_ms > 150]
 
     if weak_tcp:
@@ -151,7 +153,7 @@ def generate_recommendations(
     if high_latency:
         recs.append("High latency detected. Pause background downloads and disable unnecessary VPN hops.")
 
-    if weak_tcp or high_latency or dns_failures:
+    if weak_tcp or high_latency:
         recs.append("Use 5 GHz Wi-Fi for speed, 2.4 GHz only when you need longer range.")
     return recs
 
@@ -234,7 +236,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Diagnose network quality and suggest practical booster actions.",
     )
-    parser.add_argument("--domain", default="example.com", help="Domain used for DNS timing checks only; TCP checks use fixed default targets.")
+    parser.add_argument("--domain", default="example.com", help="Domain used for DNS timing checks only; TCP checks use: 1.1.1.1:443, 8.8.8.8:53, example.com:443.")
     parser.add_argument("--attempts", type=int, default=3, help="Probe attempts per target.")
     parser.add_argument("--timeout", type=float, default=2.0, help="Timeout in seconds for each probe.")
     parser.add_argument("--json", action="store_true", help="Print machine-readable JSON output.")
