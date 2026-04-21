@@ -234,7 +234,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Diagnose network quality and suggest practical booster actions.",
     )
-    parser.add_argument("--domain", default="example.com", help="Domain used only for DNS timing checks (TCP checks use default targets).")
+    parser.add_argument("--domain", default="example.com", help="Domain used for DNS timing checks only; TCP checks use fixed default targets.")
     parser.add_argument("--attempts", type=int, default=3, help="Probe attempts per target.")
     parser.add_argument("--timeout", type=float, default=2.0, help="Timeout in seconds for each probe.")
     parser.add_argument("--json", action="store_true", help="Print machine-readable JSON output.")
@@ -245,9 +245,9 @@ def main() -> int:
     args = parse_args()
 
     if args.attempts <= 0:
-        raise SystemExit("--attempts must be greater than 0")
+        raise SystemExit("--attempts must be a positive integer")
     if args.timeout <= 0:
-        raise SystemExit("--timeout must be greater than 0")
+        raise SystemExit("--timeout must be a positive number")
 
     report = create_report(args.domain, args.attempts, args.timeout)
 
