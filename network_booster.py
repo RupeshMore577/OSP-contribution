@@ -183,7 +183,7 @@ def os_dns_hints(selected_dns: str | None) -> list[str]:
         hints.extend(
             [
                 "Windows (PowerShell as Admin):",
-                f"  Set-DnsClientServerAddress -InterfaceAlias 'Wi-Fi' -ServerAddresses ('{selected_dns}','1.1.1.1')",
+                f"  Set-DnsClientServerAddress -InterfaceAlias 'Wi-Fi' -ServerAddresses ('{selected_dns}','{FALLBACK_DNS}')",
             ]
         )
 
@@ -234,7 +234,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Diagnose network quality and suggest practical booster actions.",
     )
-    parser.add_argument("--domain", default="example.com", help="Domain used for DNS timing checks.")
+    parser.add_argument("--domain", default="example.com", help="Domain used only for DNS timing checks (TCP checks use default targets).")
     parser.add_argument("--attempts", type=int, default=3, help="Probe attempts per target.")
     parser.add_argument("--timeout", type=float, default=2.0, help="Timeout in seconds for each probe.")
     parser.add_argument("--json", action="store_true", help="Print machine-readable JSON output.")
