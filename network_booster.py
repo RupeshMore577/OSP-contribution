@@ -12,7 +12,7 @@ import socket
 import struct
 import time
 from dataclasses import asdict, dataclass
-from typing import Iterable
+from typing import Iterable, cast
 
 DEFAULT_DNS_SERVERS = [
     "1.1.1.1",  # Cloudflare
@@ -20,6 +20,8 @@ DEFAULT_DNS_SERVERS = [
     "9.9.9.9",  # Quad9
     "208.67.222.222",  # OpenDNS
 ]
+
+FALLBACK_DNS = DEFAULT_DNS_SERVERS[0]
 
 DEFAULT_TCP_TARGETS = [
     ("1.1.1.1", 443),
@@ -122,7 +124,7 @@ def best_dns(results: Iterable[DnsProbeResult]) -> str | None:
     valid = [r for r in results if r.average_ms is not None and r.success_rate >= 0.5]
     if not valid:
         return None
-    return min(valid, key=lambda r: r.average_ms).server
+    return min(valid, key=lambda r: cast(float, r.average_ms)).server
 
 
 def generate_recommendations(
@@ -166,7 +168,7 @@ def os_dns_hints(selected_dns: str | None) -> list[str]:
             [
                 "Linux (NetworkManager):",
                 "  Find connection name: nmcli con show",
-                f"  nmcli con mod <connection-name> ipv4.dns '{selected_dns} 1.1.1.1'",
+                f"  nmcli con mod <connection-name> ipv4.dns '{selected_dns} {FALLBACK_DNS}'",
                 "  nmcli con up <connection-name>",
             ]
         )
@@ -174,7 +176,7 @@ def os_dns_hints(selected_dns: str | None) -> list[str]:
         hints.extend(
             [
                 "macOS:",
-                f"  sudo networksetup -setdnsservers Wi-Fi {selected_dns} 1.1.1.1",
+                f"  sudo networksetup -setdnsservers Wi-Fi {selected_dns} {FALLBACK_DNS}",
             ]
         )
     elif "windows" in system:
