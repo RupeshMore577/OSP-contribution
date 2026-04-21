@@ -58,7 +58,7 @@ def build_dns_query(domain: str) -> tuple[int, bytes]:
     header = struct.pack("!HHHHHH", transaction_id, flags, qdcount, 0, 0, 0)
 
     labels = domain.rstrip(".").split(".")
-    question = b"".join(struct.pack("B", len(label)) + label.encode("ascii") for label in labels)
+    question = b"".join(struct.pack("B", len(label)) + label.encode("idna") for label in labels)
     question += b"\x00"  # end of QNAME
     question += struct.pack("!HH", 1, 1)  # QTYPE A, QCLASS IN
 
@@ -122,7 +122,7 @@ def best_dns(results: Iterable[DnsProbeResult]) -> str | None:
     valid = [r for r in results if r.average_ms is not None and r.success_rate >= 0.5]
     if not valid:
         return None
-    return min(valid, key=lambda r: r.average_ms if r.average_ms is not None else float("inf")).server
+    return min(valid, key=lambda r: r.average_ms).server
 
 
 def generate_recommendations(
@@ -165,6 +165,7 @@ def os_dns_hints(selected_dns: str | None) -> list[str]:
         hints.extend(
             [
                 "Linux (NetworkManager):",
+                "  Find connection name: nmcli con show",
                 f"  nmcli con mod <connection-name> ipv4.dns '{selected_dns} 1.1.1.1'",
                 "  nmcli con up <connection-name>",
             ]
