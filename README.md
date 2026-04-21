@@ -19,13 +19,13 @@ When internet feels slow, many users do not know whether the issue is DNS, packe
 
 ### Run
 ```bash
-python3 /home/runner/work/OSP-contribution/OSP-contribution/network_booster.py
+python3 network_booster.py
 ```
 
 ### Example options
 ```bash
-python3 /home/runner/work/OSP-contribution/OSP-contribution/network_booster.py --attempts 5 --timeout 2.5
-python3 /home/runner/work/OSP-contribution/OSP-contribution/network_booster.py --domain github.com --json
+python3 network_booster.py --attempts 5 --timeout 2.5
+python3 network_booster.py --domain github.com --json
 ```
 
 ### Why this is useful in real life

@@ -122,7 +122,7 @@ def best_dns(results: Iterable[DnsProbeResult]) -> str | None:
     valid = [r for r in results if r.average_ms is not None and r.success_rate >= 0.5]
     if not valid:
         return None
-    return min(valid, key=lambda r: r.average_ms).server
+    return min(valid, key=lambda r: r.average_ms if r.average_ms is not None else float("inf")).server
 
 
 def generate_recommendations(
@@ -149,7 +149,8 @@ def generate_recommendations(
     if high_latency:
         recs.append("High latency detected. Pause background downloads and disable unnecessary VPN hops.")
 
-    recs.append("Use 5 GHz Wi-Fi for speed, 2.4 GHz only when you need longer range.")
+    if weak_tcp or high_latency or dns_failures:
+        recs.append("Use 5 GHz Wi-Fi for speed, 2.4 GHz only when you need longer range.")
     return recs
 
 
