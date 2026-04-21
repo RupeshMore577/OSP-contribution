@@ -7,7 +7,7 @@ import argparse
 import json
 import os
 import platform
-import random
+import secrets
 import socket
 import struct
 import time
@@ -54,7 +54,7 @@ class NetworkReport:
 
 
 def build_dns_query(domain: str) -> tuple[int, bytes]:
-    transaction_id = random.randint(0, 65535)
+    transaction_id = secrets.randbelow(65536)
     flags = 0x0100  # standard recursive query
     qdcount = 1
     header = struct.pack("!HHHHHH", transaction_id, flags, qdcount, 0, 0, 0)
